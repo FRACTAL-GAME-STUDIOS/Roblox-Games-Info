@@ -31,20 +31,6 @@ jobs:
       - name: Ensure jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Resolve UNIVERSE_ID
-        id: resolve
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "${{ github.event.inputs.universeId || '' }}" ]]; then
-            echo "UNIVERSE_ID=${{ github.event.inputs.universeId }}" >> "$GITHUB_ENV"
-          elif [[ -n "${{ vars.UNIVERSE_ID || '' }}" ]]; then
-            echo "UNIVERSE_ID=${{ vars.UNIVERSE_ID }}" >> "$GITHUB_ENV"
-          else
-            echo "::error::universeId not provided (use workflow_dispatch input or repo variable UNIVERSE_ID)"
-            exit 1
-          fi
-
       - name: Fetch votes
         id: fetch
         shell: bash
