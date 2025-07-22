@@ -2,37 +2,46 @@ name: ModelUp
 
 on:
   schedule:
-    - cron: '0 * * * *'   # cada hora en UTC
+    - cron: '0 * * * *'   # cada hora (UTC)
   workflow_dispatch:
     inputs:
       universeId:
         description: Roblox universeId
-        required: true
+        required: false
         type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: modelup-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FILE_PATH: data/ModelUp.json
+
 jobs:
   poll-and-save:
     runs-on: ubuntu-latest
-    env:
-      FILE_PATH: data/ModelUp.json
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Ensure jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Resolve universeId
-        id: id_resolver
+      - name: Resolve UNIVERSE_ID
+        id: resolve
+        shell: bash
         run: |
-          if [[ -n "${{ github.event.inputs.universeId }}" ]]; then
-            echo "uid=${{ github.event.inputs.universeId }}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ vars.UNIVERSE_ID }}" ]]; then
-            echo "uid=${{ vars.UNIVERSE_ID }}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [[ -n "${{ github.event.inputs.universeId || '' }}" ]]; then
+            echo "UNIVERSE_ID=${{ github.event.inputs.universeId }}" >> "$GITHUB_ENV"
+          elif [[ -n "${{ vars.UNIVERSE_ID || '' }}" ]]; then
+            echo "UNIVERSE_ID=${{ vars.UNIVERSE_ID }}" >> "$GITHUB_ENV"
           else
-            echo "::error::universeId not provided (use workflow_dispatch input or repo var UNIVERSE_ID)"
+            echo "::error::universeId not provided (use workflow_dispatch input or repo variable UNIVERSE_ID)"
             exit 1
           fi
 
@@ -41,9 +50,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          UID="${{ steps.id_resolver.outputs.uid }}"
-          RESP="$(curl -sS -w '\n%{http_code}' "https://games.roblox.com/v1/games/votes?universeIds=${UID}")"
+          RESP="$(curl -sS -w '\n%{http_code}' "https://games.roblox.com/v1/games/votes?universeIds=${UNIVERSE_ID}")"
           BODY="$(printf '%s' "$RESP" | head -n -1)"
           CODE="$(printf '%s' "$RESP" | tail -n1)"
 
@@ -62,11 +69,13 @@ jobs:
           DOWN="$(jq -r '.data[0].downVotes' <<<"$BODY")"
           TS="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-          echo "id=$ID" >> "$GITHUB_OUTPUT"
-          echo "upVotes=$UP" >> "$GITHUB_OUTPUT"
-          echo "downVotes=$DOWN" >> "$GITHUB_OUTPUT"
-          echo "timestamp=$TS" >> "$GITHUB_OUTPUT"
-          echo "uid=$UID" >> "$GITHUB_OUTPUT"
+          {
+            echo "id=$ID"
+            echo "upVotes=$UP"
+            echo "downVotes=$DOWN"
+            echo "timestamp=$TS"
+            echo "uid=$UNIVERSE_ID"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update JSON file
         shell: bash
@@ -90,14 +99,15 @@ jobs:
             printf '[\n%s\n]\n' "$NEW_ENTRY" > "$FILE_PATH"
           fi
 
-      - name: Commit if changed
+      - name: Commit and push if changed
+        shell: bash
         run: |
           if git diff --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git config user.name "IOxee"
-          git config user.email "IOxee@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$FILE_PATH"
           git commit -m "ModelUp: update votes $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           git push
