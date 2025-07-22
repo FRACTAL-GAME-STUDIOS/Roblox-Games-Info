@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: '0 * * * *'   # cada hora (UTC)
   workflow_dispatch:
-    inputs:
-      universeId:
-        description: Roblox universeId
-        required: false
-        type: string
 
 permissions:
   contents: write
