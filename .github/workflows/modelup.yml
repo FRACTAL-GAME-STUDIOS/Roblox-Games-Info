@@ -2,8 +2,8 @@ name: ModelUp
 
 on:
   schedule:
-    - cron: '0 * * * *'  # cada hora (UTC)
-  workflow_dispatch: {}   # para lanzarlo manualmente si quieres
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main   # ajusta si tu rama default no es main
+          ref: main
 
       - name: Ensure jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -33,26 +33,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           RESP="$(curl -sS -w '\n%{http_code}' "https://games.roblox.com/v1/games/votes?universeIds=${UNIVERSE_ID}")"
           BODY="$(printf '%s' "$RESP" | head -n -1)"
           CODE="$(printf '%s' "$RESP" | tail -n1)"
-
           if [[ "$CODE" -ne 200 ]]; then
             echo "::error::Bad Gateway (HTTP $CODE)"
             exit 1
           fi
-
           if [[ "$(jq '.data | length' <<<"$BODY")" -eq 0 ]]; then
             echo "::error::Invalid response structure"
             exit 1
           fi
-
           ID="$(jq -r '.data[0].id' <<<"$BODY")"
           UP="$(jq -r '.data[0].upVotes' <<<"$BODY")"
           DOWN="$(jq -r '.data[0].downVotes' <<<"$BODY")"
           TS="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-
           {
             echo "id=$ID"
             echo "upVotes=$UP"
@@ -66,7 +61,6 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$(dirname "$FILE_PATH")"
-
           NEW_ENTRY="$(jq -n \
             --arg ts "${{ steps.fetch.outputs.timestamp }}" \
             --arg uid "${{ steps.fetch.outputs.uid }}" \
@@ -74,34 +68,21 @@ jobs:
             --argjson up  ${{ steps.fetch.outputs.upVotes }} \
             --argjson down ${{ steps.fetch.outputs.downVotes }} \
             '{timestamp:$ts, universeId:$uid, id:$id, upVotes:$up, downVotes:$down}')"
-
-          if [[ -f "$FILE_PATH" ]]; then
-            TMP="$(mktemp)"
-            jq --argjson entry "$NEW_ENTRY" '. + [$entry]' "$FILE_PATH" > "$TMP"
-            mv "$TMP" "$FILE_PATH"
-          else
-            printf '[\n%s\n]\n' "$NEW_ENTRY" > "$FILE_PATH"
-          fi
+          printf '%s\n' "$NEW_ENTRY" > "$FILE_PATH"
 
       - name: Commit and push if changed
         shell: bash
         run: |
           set -euo pipefail
-
           git add -N "$FILE_PATH"
-
           if ! git status --porcelain | grep -q .; then
             echo "No changes to commit."
             exit 0
           fi
-
           git config user.name "IOxee"
           git config user.email "IOxee@users.noreply.github.com"
-
           git add "$FILE_PATH"
-
           MSG="ModelUp: update votes $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           git commit -m "$MSG"
-
           BRANCH="${GITHUB_REF_NAME:-main}"
           git push origin HEAD:"$BRANCH"
