@@ -1,65 +1,7 @@
-[
-  {
-    "timestamp": "2025-07-22T20:11:20Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 264,
-    "downVotes": 230
-  },
-  {
-    "timestamp": "2025-07-22T21:15:19Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 264,
-    "downVotes": 232
-  },
-  {
-    "timestamp": "2025-07-22T22:14:22Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 232
-  },
-  {
-    "timestamp": "2025-07-22T23:14:27Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 232
-  },
-  {
-    "timestamp": "2025-07-23T01:10:35Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 233
-  },
-  {
-    "timestamp": "2025-07-23T03:26:41Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 236
-  },
-  {
-    "timestamp": "2025-07-23T04:36:33Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 237
-  },
-  {
-    "timestamp": "2025-07-23T05:21:59Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 237
-  },
-  {
-    "timestamp": "2025-07-23T06:21:26Z",
-    "universeId": "7899736906",
-    "id": 7899736906,
-    "upVotes": 265,
-    "downVotes": 237
-  }
-]
+{
+  "timestamp": "2025-07-23T06:52:33Z",
+  "universeId": "7899736906",
+  "id": 7899736906,
+  "upVotes": 265,
+  "downVotes": 237
+}
