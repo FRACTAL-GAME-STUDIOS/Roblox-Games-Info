@@ -79,8 +79,6 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git config user.name "IOxee"
-          git config user.email "IOxee@users.noreply.github.com"
           git add "$FILE_PATH"
           MSG="ModelUp: update votes $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           git commit -m "$MSG"
